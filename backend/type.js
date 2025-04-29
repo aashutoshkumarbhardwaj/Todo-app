@@ -10,9 +10,8 @@ const updatetodo=zod.object({
    
 })
 
-modeule.exports={
+module.exports = {
     createtodo,
     updatetodo,
-} 
+};
 
- 
