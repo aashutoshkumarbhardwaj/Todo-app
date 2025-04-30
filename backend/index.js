@@ -1,19 +1,22 @@
 const express = require('express');
+const cors = require('cors');
 const { todo } = require('./db');
 const { createtodo, updatetodo } = require('./type');
+
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 
 app.post('/todo', async (req, res) => {
+  const createPayload = req.body;
+  const parsed = createtodo.safeParse(createPayload);
+
+  if (!parsed.success) {
+    return res.status(400).json({ msg: 'Invalid payload' });
+  }
+
   try {
-    const createPayload = req.body;
-    const parsedPayload = createtodo.safeParse(createPayload);
-
-    if (!parsedPayload.success) {
-      return res.status(400).json({ msg: 'Invalid payload' });
-    }
-
     const newTodo = await todo.create({
       title: createPayload.title,
       description: createPayload.description,
@@ -29,7 +32,7 @@ app.post('/todo', async (req, res) => {
 app.get('/todos', async (req, res) => {
   try {
     const todos = await todo.find({});
-    if (!todos || todos.length === 0) {
+    if (!todos.length) {
       return res.status(404).json({ msg: 'No todos found' });
     }
     res.json(todos);
@@ -39,16 +42,15 @@ app.get('/todos', async (req, res) => {
 });
 
 app.put('/completed', async (req, res) => {
+  const updatePayload = req.body;
+  const parsed = updatetodo.safeParse(updatePayload);
+
+  if (!parsed.success) {
+    return res.status(400).json({ msg: 'Invalid payload' });
+  }
+
   try {
-    const updatePayload = req.body;
-    const parsedPayload = updatetodo.safeParse(updatePayload);
-
-    if (!parsedPayload.success) {
-      return res.status(400).json({ msg: 'Invalid payload' });
-    }
-
     await todo.findByIdAndUpdate(updatePayload.id, { completed: true });
-
     res.json({ msg: 'Todo updated successfully' });
   } catch (err) {
     res.status(500).json({ msg: 'Internal server error', error: err.message });
